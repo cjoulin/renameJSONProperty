@@ -54,17 +54,17 @@ do
 			dummy='';;
 		f)	jsonFile="$OPTARG";;
 		h)	usage;;
-		n)	newPath="$OPTARG";;
-		o)	oldPath="$OPTARG";;
+		n)	newName="$OPTARG";;
+		o)	oldName="$OPTARG";;
 		s)	separator="$OPTARG";;
 		\?)	usage 1 "Unknown option $OPTARG";;
 	esac
 done
 [[ -z "$jsonFile" ]] && usage 2 "The -f option is madatory"
-[[ -z "$newPath" ]] && usage 2 "The -n option is madatory"
-[[ -z "$oldPath" ]] && usage 2 "The -o option is madatory"
-[[ "$newPath" == "$oldPath" ]] && usage 3 "Old and new pathes must be different"
-[[ "$oldPath" == "/"*"/" || "$oldPath" == "/"*"/$separator"* || "$oldPath" == *"$separator/"*"/" || "$oldPath" == *"$separator/"*"/$separator"* ]] \
+[[ -z "$newName" ]] && usage 2 "The -n option is madatory"
+[[ -z "$oldName" ]] && usage 2 "The -o option is madatory"
+[[ "$newName" == "$oldName" ]] && usage 3 "Old and new names must be different"
+[[ "$oldName" == "/"*"/" || "$oldName" == "/"*"/$separator"* || "$oldName" == *"$separator/"*"/" || "$oldName" == *"$separator/"*"/$separator"* ]] \
 	&& mode=$(($mode + 2))
 
 if [[ "$jsonFile" == *'/'* ]]
@@ -87,6 +87,6 @@ fi
 	echo "]}"
 } < "$jsonFile" > ".$jsonFile"
 
-node $scriptPath/renameJSONProperty.js "$separator" "${dummy:+$dummy$separator}$oldPath" "${dummy:+$dummy$separator}$newPath" "$(pwd)/.$jsonFile" 2 $mode
+node $scriptPath/renameJSONProperty.js "$separator" "${dummy:+$dummy$separator}$oldName" "${dummy:+$dummy$separator}$newName" "$(pwd)/.$jsonFile" 2 $mode
 
 rm -f ".$jsonFile"
