@@ -95,25 +95,28 @@ var renamePropertyRegExp = function(obj, oldName, newName) {
  * Rename property from the root of the object
  */
 Object.prototype.renamePropertyFromRoot = function (names, toPrint) {
-	var i;
+	var i, key;
+	var keys = Object.keys(this);
+	var oldName = this[names.old.substring(0, names.old.indexOf(separator))]
+	var localNames = getRootPartNames(names);
 
 	if (Object.prototype.toString.call(this) == '[object Array]') {
 		// We scan the array
-		for (i = 0 ; i < this.length ; i++) {
+		for (i = this.length ; i-- ;) {
 			this[i] = this[i].renamePropertyFromRoot(names, toPrint - 1);
 		}
 	} else {
 		if (Object.prototype.toString.call(this) == '[object Object]' && names.old.split(separator).length >= 2) {
-			for (var obj in this) {
+			for (i = keys.length ; i-- ;) {
+				key = keys[i];
 				// We search for the needed object
-				if (this[obj] === this[names.old.substring(0, names.old.indexOf(separator))]) {
-					this[obj] = this[obj].renamePropertyFromRoot(getSubPartNames(names), toPrint - 1);
+				if (this[key] === oldName) {
+					this[key] = this[key].renamePropertyFromRoot(getSubPartNames(names), toPrint - 1);
 					break;
 				}
 			}
 		}
 	}
-	var localNames = getRootPartNames(names);
 	// If the property must be modified, we do so
 	if (localNames.old != localNames.new) {
 		renameProperty(this, localNames.old, localNames.new);
@@ -127,25 +130,25 @@ Object.prototype.renamePropertyFromRoot = function (names, toPrint) {
  * Rename property from the root of the object using regular expressions
  */
 Object.prototype.renamePropertyFromRootRegExp = function (names, toPrint) {
-	var i;
-	var j;
-	var name;
+	var i, j, key;
+	var keys = Object.keys(this);
 	var foundNames = [];
 	var localNames = [];
 
 	if (Object.prototype.toString.call(this) == '[object Array]') {
 		// We scan the array
-		for (i = 0 ; i < this.length ; i++) {
+		for (i = this.length ; i-- ;) {
 			this[i] = this[i].renamePropertyFromRootRegExp(names, toPrint - 1);
 		}
 	} else {
 		if (Object.prototype.toString.call(this) == '[object Object]' && names.old.split(separator).length >= 2) {
 			foundNames = buildNamesArray(this, names.old.substring(0, names.old.indexOf(separator)));
-			for (var obj in this) {
-				for (j = 0; j < foundNames.length ; j++) {
+			for (i = keys.length ; i-- ;) {
+				key = keys[i];
+				for (j = foundNames.length ; j-- ;) {
 					// We search all the asked properties to act on it
-					if (this[obj] === this[foundNames[j]]) {
-							this[obj] = this[obj].renamePropertyFromRootRegExp(getSubPartNames(names), toPrint - 1);
+					if (this[key] === this[foundNames[j]]) {
+						this[key] = this[key].renamePropertyFromRootRegExp(getSubPartNames(names), toPrint - 1);
 					}
 				}
 			}
@@ -159,12 +162,12 @@ Object.prototype.renamePropertyFromRootRegExp = function (names, toPrint) {
 		if (localNames.new.match(/^\/.*\/$/)) {
 			// We suppress the "/" to use the regexp as a string to convert
 			localNames.new = localNames.new.substring(1, localNames.new.length - 1);
-			for (j = 0; j < foundNames.length ; j++) {
-				renamePropertyRegExp(this, foundNames[j], localNames.new);
+			for (i = foundNames.length ; i-- ;) {
+				renamePropertyRegExp(this, foundNames[i], localNames.new);
 			}
 		} else {
-			for (j = 0; j < foundNames.length ; j++) {
-				renameProperty(this, foundNames[j], localNames.new);
+			for (i = foundNames.length ; i-- ;) {
+				renameProperty(this, foundNames[i], localNames.new);
 			}
 		}
 	}
@@ -177,34 +180,34 @@ Object.prototype.renamePropertyFromRootRegExp = function (names, toPrint) {
  * Rename property anywhere in the object
  */
 Object.prototype.renamePropertyAnyWhere = function (names, toPrint) {
-	var i;
+	var i, key;
+	var keys = Object.keys(this);
 	var localNames = [];
 
 	if (Object.prototype.toString.call(this) == '[object Array]') {
 		// We scan the array
-		for (i = 0 ; i < this.length ; i++) {
+		for (i = this.length ; i-- ;) {
 			this[i] = this[i].renamePropertyAnyWhere(names, toPrint - 1);
 		}
 	} else {
 		if (Object.prototype.toString.call(this) == '[object Object]') {
 			if (names.old.split(separator).length >= 2) {
-				for (var obj in this) {
+				for (i = keys.length ; i-- ;) {
+					key = keys[i];
 					// We search for the needed object
-					if (this[obj] === this[names.old.substring(0, names.old.indexOf(separator))]) {
+					if (this[key] === this[names.old.substring(0, names.old.indexOf(separator))]) {
 						// We act in its sub objects
-						this[obj] = this[obj].renamePropertyAnyWhere(getSubPartNames(names), toPrint - 1);
+						this[key] = this[key].renamePropertyAnyWhere(getSubPartNames(names), toPrint - 1);
 					} else {
 						// If we do not find it, we search for it deeper
-						this[obj] = this[obj].renamePropertyAnyWhere(names, toPrint - 1);
+						this[key] = this[key].renamePropertyAnyWhere(names, toPrint - 1);
 					}
 				}
 			} else {
-				// If we are on the leaf of the wanted path...
-				if (this[obj] !== this[names.old.substring(0, names.old.indexOf(separator))]) {
-					// ...if it is not the one we are in, we search for it deeper
-					for (var obj in this) {
-						this[obj] = this[obj].renamePropertyAnyWhere(names, toPrint - 1);
-					}
+				// We search deeper
+				for (i = keys.length ; i-- ;) {
+					key = keys[i];
+					this[key] = this[key].renamePropertyAnyWhere(names, toPrint - 1);
 				}
 			}
 		}
@@ -224,15 +227,14 @@ Object.prototype.renamePropertyAnyWhere = function (names, toPrint) {
  * Rename property anywhere in the object using regular expressions
  */
 Object.prototype.renamePropertyAnyWhereRegExp = function (names, toPrint) {
-	var i;
-	var j;
-	var name;
+	var i, j, key;
 	var foundNames = [];
 	var localNames = [];
+	var keys = Object.keys(this);
 
 	if (Object.prototype.toString.call(this) == '[object Array]') {
 		// We scan the array
-		for (i = 0 ; i < this.length ; i++) {
+		for (i = this.length ; i-- ;) {
 			this[i] = this[i].renamePropertyAnyWhereRegExp(names, toPrint - 1);
 		}
 	} else {
@@ -240,36 +242,40 @@ Object.prototype.renamePropertyAnyWhereRegExp = function (names, toPrint) {
 			if (names.old.split(separator).length >= 2) {
 				foundNames = buildNamesArray(this, names.old.substring(0, names.old.indexOf(separator)));
 				if (foundNames.length > 0) {
-					for (var obj in this) {
-						for (j = 0; j < foundNames.length ; j++) {
-							if (this[obj] === this[foundNames[n]]) {
-								this[obj] = this[obj].renamePropertyAnyWhereRegExp(getSubPartNames(names), toPrint - 1);
+					for (i = keys.length ; i-- ;) {
+						key = keys[i];
+						for (j = foundNames.length ; j-- ;) {
+							if (this[key] === this[foundNames[n]]) {
+								this[key] = this[key].renamePropertyAnyWhereRegExp(getSubPartNames(names), toPrint - 1);
 							} else {
-								this[obj] = this[obj].renamePropertyAnyWhereRegExp(names, toPrint - 1);
+								this[key] = this[key].renamePropertyAnyWhereRegExp(names, toPrint - 1);
 							}
 						}
 					}
 				} else {
-					for (var obj in this) {
-						this[obj] = this[obj].renamePropertyAnyWhereRegExp(names, toPrint - 1);
+					for (i = keys.length ; i-- ;) {
+						key = keys[i];
+						this[key] = this[key].renamePropertyAnyWhereRegExp(names, toPrint - 1);
 					}
 				}
 			} else {
 				foundNames = buildNamesArray(this, names.old);
 				if (foundNames.length > 0) {
-					for (var obj in this) {
-						for (j = 0; j < foundNames.length ; j++) {
+					for (i = keys.length ; i-- ;) {
+						key = keys[i];
+						for (j = foundNames.length ; j-- ;) {
 							// For the objects not matching one of the searched one
-							if (this[obj] !== this[foundNames[j]]) {
+							if (this[key] !== this[foundNames[j]]) {
 								// We search for the wanted sub object in sub objects
-								this[obj] = this[obj].renamePropertyAnyWhereRegExp(names, toPrint - 1);
+								this[key] = this[key].renamePropertyAnyWhereRegExp(names, toPrint - 1);
 							}
 						}
 					}
 				} else {
 					// If we did not find any of the wanted object, we search for them deeper
-					for (var obj in this) {
-						this[obj] = this[obj].renamePropertyAnyWhereRegExp(names, toPrint - 1);
+					for (i = keys.length ; i-- ;) {
+						key = keys[i];
+						this[key] = this[key].renamePropertyAnyWhereRegExp(names, toPrint - 1);
 					}
 				}
 			}
@@ -283,11 +289,11 @@ Object.prototype.renamePropertyAnyWhereRegExp = function (names, toPrint) {
 	if (localNames.old != localNames.new) {
 		if (localNames.new.match(/^\/.*\/$/)) {
 			localNames.new = localNames.new.substring(1, localNames.new.length - 1);
-			for (j = 0; j < foundNames.length ; j++) {
+			for (j = foundNames.length ; j-- ;) {
 				renamePropertyRegExp(this, foundNames[j], localNames.new);
 			}
 		} else {
-			for (j = 0; j < foundNames.length ; j++) {
+			for (j = foundNames.length ; j-- ;) {
 				renameProperty(this, foundNames[j], localNames.new);
 			}
 		}

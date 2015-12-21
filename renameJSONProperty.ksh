@@ -4,7 +4,7 @@ scriptName="${0##*/}"
 scriptPath="${0%/*}"
 
 # Prints the online help or an error message
-function usage
+function usage # [<errCode> <errMessage>]
 {
 	if [[ $# -eq 0 ]]
 	then
@@ -110,7 +110,7 @@ do
 			prefix="$OPTARG";;
 		s)	[[ "$separator" != '.' ]] && usage 2 "There can be only one -s option"
 			separator="$OPTARG";;
-		:)	usage 1 "Option $OPTARG needs a value";;
+		:)	usage 2 "Option $OPTARG needs a value";;
 		\?)	usage 1 "Unknown option $OPTARG";;
 	esac
 done
